@@ -1,7 +1,11 @@
 package com.kibernumacademy.testing.services;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
@@ -10,6 +14,7 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 
 import com.kibernumacademy.testing.model.User;
@@ -59,5 +64,42 @@ public class UserServiceTest {
     // Entonces esperamos que el optionaal este presente y que el nombre de usuario sea "sofia"
     assertTrue(result.isPresent());
     assertEquals("sofia", result.get().getUsername());
+  }
+
+  @Test
+  void testGetUserById_NotFound() {
+    // Dado un id que no existe
+    when(userRepository.findById(1L)).thenReturn(Optional.empty());
+
+    Optional<User> result = userService.getUserById(1L);
+
+    // Entonces esperamos que el optionaal este presente y que el nombre de usuario sea "sofia"
+    assertFalse(result.isPresent());
+  }
+
+  @Test
+  void testSaveUser() {
+
+    // Dado un usuario
+    User user = new User(null, "sofia", "sofia@test.com", "academy");
+    User saveUser = new User(1L, "sofia", "sofia@test.com", "academy");
+
+    // Configuramos el mock para que devuelva el usuario guardado
+    when(userRepository.save(ArgumentMatchers.any(User.class))).thenReturn(saveUser);
+
+    // Cuando llamos a saveUser en el servicio
+    User result = userService.saveUser(user);
+
+    // Entonces esperamos que el usuario que se guarda en la base de datos no sea null y tengo un ID ASIGNADO
+    assertNotNull(result);
+    assertEquals(1L, result.getId());
+    assertEquals("sofia", result.getUsername());
+  }
+
+  @Test
+  void testDeleteUser() {
+    userService.deleteUser(1L);
+    // Verificamos que el repository invoque este metodo exactamente una vez
+      verify(userRepository, times(1)).deleteById(1L);
   }
 }
